@@ -22,21 +22,20 @@
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">Long URL</th>
             <th scope="col">Short URL ID</th>
-            <th scope="col">Shortening Links</th>
+            <th scope="col">Long URL</th>
           </tr>
         </thead>
         <tbody>
-          <% for (let id in urls) { %>
+          <% for (let ids in urls) { %>
             <tr>
-              <td><%= urls[id] %></td>
-              <td><%= id %></td>
-              <td><%= href='#' %></td>
+              <td><%= ids %></td>
+              <td><%= urls[ids] %></td>
             </tr>
           <% } %>
         </tbody>
       </table>
+      <a href="#" class="button">Make a new short URL</a>
     </main>
     <!-- Bootstrap JS -->
     <script
