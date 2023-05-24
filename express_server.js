@@ -1,11 +1,18 @@
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
+const crypto = require("crypto");
 const PORT = 8080;
 
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.set("view engine", "ejs");
 
+
+const generateRandomString = function() {
+  const id = crypto.randomBytes(3).toString('hex');
+  return id
+};
 
 const urlDatabase = {
   // id === short URL codes
@@ -17,6 +24,11 @@ const urlDatabase = {
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
+});
+
+app.post("/urls", (req, res) => {
+  console.log(req.body);
+  res.send("Ok");
 });
 
 app.get("/urls/new", (req, res) => {
