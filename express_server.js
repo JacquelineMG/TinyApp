@@ -8,8 +8,8 @@ app.set("view engine", "ejs");
 
 
 const urlDatabase = {
-  // ids === short URL codes
-  // urls[ids] === long urls
+  // id === short URL codes
+  // urls[id] === long urls
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
