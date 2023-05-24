@@ -12,6 +12,11 @@
   </head>
 
   <body>
+
+    <header>
+      <%- include("partials/_header") %>
+    </header>
+
     <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
@@ -19,7 +24,7 @@
         <p class="card-text">
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
-        <a href="#" class="button">Make a new short URL</a>
+        <a href="#" class="button">Create a new URL</a>
       </div>
       <div class="card-footer text-muted"></div>
     </div>
