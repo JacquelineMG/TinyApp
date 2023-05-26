@@ -32,6 +32,13 @@ const urlDatabase = {
 
 //SAVE: submit new URL
 
+//LOGIN 
+app.post("/login", (req, res) => {
+  const cookie = req.body.username;
+  res.cookie("username", cookie);
+  res.redirect("/urls");
+});
+
 
 //INDEX: display all URLS
 app.get("/urls", (req, res) => {
