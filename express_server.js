@@ -1,19 +1,26 @@
+// Server Setup and Middleware:
 const express = require("express");
 const app = express();
-const morgan = require("morgan");
-const crypto = require("crypto");
 const PORT = 8080;
 
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev'));
 app.set("view engine", "ejs");
+app.use(express.urlencoded({ extended: true }));
 
+const morgan = require("morgan");
+app.use(morgan('dev'));
 
+const crypto = require("crypto");
+const { url } = require("inspector");
+
+// Helper Functions:
+// Random code generator:
 const generateRandomString = function() {
   const id = crypto.randomBytes(3).toString('hex');
   return id
 };
 
+
+// Database:
 const urlDatabase = {
   // id === short URL codes
   // urls[id] === long urls
@@ -21,6 +28,12 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+//CREATE: show create new URL
+
+//SAVE: submit new URL
+
+
+//INDEX: display all URLS
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
@@ -33,6 +46,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${newShortURL}`);
 });
 
+//SAVE: Submit new URL
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
@@ -47,10 +61,19 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+
+//UPDATE: Submit edited URL
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.newURL
+  res.redirect("/urls");
+});
+
+
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
+
 
 app. get("/urls.json", (req, res) => {
   res.json(urlDatabase);
@@ -65,6 +88,8 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+
+//Listener:
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
