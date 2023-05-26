@@ -12,6 +12,9 @@ app.use(morgan('dev'));
 const crypto = require("crypto");
 const { url } = require("inspector");
 
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
 // Helper Functions:
 // Random code generator:
 const generateRandomString = function() {
@@ -42,7 +45,10 @@ app.post("/login", (req, res) => {
 
 //INDEX: display all URLS
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies["username"]
+ };
   res.render("urls_index", templateVars);
 });
 
@@ -55,16 +61,23 @@ app.post("/urls", (req, res) => {
 
 //SAVE: Submit new URL
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+  res.render("urls_new", templateVars);
 });
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
-})
+});
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { 
+    id: req.params.id, 
+    longURL: urlDatabase[req.params.id],
+    username: req.cookies["username"] 
+  };
   res.render("urls_show", templateVars);
 });
 
