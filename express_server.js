@@ -57,11 +57,21 @@ const generateRandomString = function() {
 // Email lookup:
 
 const findUserByEmail = function (newEmail) {
-  for (const user in users) {
-    if (users[user].email === newEmail) {
-      return users[user];
+  for (const userKey in users) {
+    if (users[userKey].email === newEmail) {
+      return users[userKey];
     }
   } return null;
+};
+
+// ID lookup:
+
+const findID = function (newID) {
+  for (const key in urlDatabase) {
+    if (key === newID) {
+      return true
+    }
+  } return false;
 };
 
 
@@ -78,6 +88,11 @@ app.get("/register", (req, res) => {
   const userID = req.cookies["user_id"];
   const user = users[userID];
 
+  // Redirect if user already logged in:
+  if (userID) {
+    return res.redirect("/urls");
+  };
+
   const templateVars = {
     user
   }
@@ -91,9 +106,16 @@ app.get("/login", (req, res) => {
   const userID = req.cookies["user_id"];
   const user = users[userID];
 
+// Redirect if user already logged in:
+
+  if (userID) {
+    return res.redirect("/urls");
+  };
+
   const templateVars = {
     user
   };
+
 res.render("urls_login",  templateVars)
 });
 
@@ -117,6 +139,10 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const userID = req.cookies["user_id"];
   const user = users[userID];
+
+  if (!userID) {
+    return res.redirect("/login");
+  };
 
   const templateVars = {
     user
@@ -143,7 +169,15 @@ app.get("/urls/:id", (req, res) => {
 // Individual redirect links page:
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+
+  const uID = req.params.id;
+  console.log(uID);
+
+  if (!findID(uID)){
+    return res.status(400).send("Sorry that tiny URL does not exist.");
+  };
+
+  const longURL = urlDatabase[uID];
   res.redirect(longURL);
 });
 
@@ -236,7 +270,13 @@ app.post("/logout", (req, res) => {
 // Add new URL process:
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);
+  
+  const userID = req.cookies["user_id"];
+
+  if (!userID) {
+    return res.status(401).send("Please login to create new tiny URLS.");
+  };
+
   const newShortURL = generateRandomString();
   urlDatabase[newShortURL] = req.body.longURL;
   res.redirect(`/urls/${newShortURL}`);
