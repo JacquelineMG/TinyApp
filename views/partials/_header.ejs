@@ -18,22 +18,14 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if (!username) { %>
-      <form class="nav-item form-inline" method="POST" action="/login">
-      <input 
-      class="form-control"
-      type="text"
-      name="username"
-      placeholder="Username"
-      style="width: 300px; margin: 0.5em" 
-      />
-      <button type="submit" class="btn btn-primary" style="margin: 0.5em"> Login </button>
-    </form>
-    <% } else { %> 
-    <form class="nav-item form-inline" method="POST" action="/logout">
-      <label for="username" style="color: white">Logged in as: <%= username %></label>
-        <button type="submit" class="btn btn-primary" style="margin: 0.5em"> Logout </button>
+    <% if (!user) { %>
+      <a class="btn btn-primary" style="margin: 0.5em" href="/register">Register</a>
+      <a class="btn btn-primary" style="margin: 0.5em" href="/login">Login</a>
+      <% } else { %>
+        <form class="nav-item form-inline" method="POST" action="/logout">
+          <label for="loggedIn" style="color: white">Logged in as: <%= user.email %></label>
+          <button type="submit" class="btn btn-primary" style="margin: 0.5em"> Logout </button>
+        </form>
       <% } %>
-    </form>
   </nav>
 </header>
