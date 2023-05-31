@@ -23,8 +23,12 @@ app.use(morgan('dev'));
 
 const crypto = require("crypto");
  
-const cookieParser = require("cookie-parser");
-app.use(cookieParser());
+// Cookie Parser with Encryption:
+const cookieSession = require("cookie-session");
+app.use(cookieSession({
+  name: "session",
+  keys: ["12312312312312", "1231231231231s"],
+}));
 
 // Password Hasher:
 const bcrypt = require("bcryptjs");
@@ -137,7 +141,7 @@ const getURLS = function (usersID) {
 
 app.get("/register", (req, res) => {
 
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const user = users[userID];
 
   // Redirect if user already logged in:
@@ -158,7 +162,7 @@ app.get("/register", (req, res) => {
 /////////////////
 
 app.get("/login", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const user = users[userID];
 
 // Redirect if user already has cookie from logging in:
@@ -180,7 +184,7 @@ res.render("urls_login",  templateVars)
 
 app.get("/urls", (req, res) => {
 
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const user = users[userID];
   const usersURLS = getURLS(userID);
 
@@ -204,7 +208,7 @@ app.get("/urls", (req, res) => {
 //////////////////////////
 
 app.get("/urls/new", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const user = users[userID];
 
   // Check if user has cookie from login:
@@ -225,7 +229,7 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
 
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const user = users[userID];
   const userURLS = getURLS(userID);
   const id = req.params.id;
@@ -327,7 +331,7 @@ users[userID] = {
 };
 
 // Assign user a cookie and redirect after registration is complete:
-res.cookie("user_id", userID);
+req.session.user_id = userID;
 res.redirect("/urls");
 });
 
@@ -361,7 +365,7 @@ app.post("/login", (req, res) => {
   };
   
   // Assign cookie as userID and redirect to /urls:
-  res.cookie("user_id", userID);
+  req.session.user_id = userID;
   res.redirect("/urls");
   });
 
@@ -373,7 +377,7 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
 
   // Clear user_id cookie and redirect to login page:
-  res.clearCookie("user_id");
+  req.session.user_id = null;
   res.redirect("/login");
 });
 
@@ -384,7 +388,7 @@ app.post("/logout", (req, res) => {
 
 app.post("/urls", (req, res) => {
   
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const longURL = req.body.longURL;
   const newShortURL = generateRandomString();
 
@@ -410,7 +414,7 @@ app.post("/urls/:id", (req, res) => {
 
   const id = req.params.id;
   const longURL = req.body.longURL;
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
 
   // Check if user is logged in:
   if (!userID) {
@@ -438,7 +442,7 @@ app.post("/urls/:id", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
 
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const user = users[userID];
   const id = req.params.id;
 
