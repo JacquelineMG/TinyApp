@@ -23,13 +23,27 @@ app.listen(PORT, () => {
 });
 
 
-// ID Database:
+// URLS Database:
+
 const urlDatabase = {
-  // id === short URL codes
-  // urls[id] === long urls
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b2xVn1: {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "abc123",
+  },
+  "8sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "abc123",
+  },
+  b2xVn2: {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "def456",
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "def456",
+  },
 };
+
 
 // User Database:
 const users = {
@@ -54,6 +68,7 @@ const generateRandomString = function() {
   return id;
 };
 
+
 // Email lookup:
 
 const findUserByEmail = function (newEmail) {
@@ -64,6 +79,7 @@ const findUserByEmail = function (newEmail) {
   } return null;
 };
 
+
 // ID lookup:
 
 const findID = function (newID) {
@@ -72,6 +88,21 @@ const findID = function (newID) {
       return true
     }
   } return false;
+};
+
+
+// Build user's individual URLS database:
+
+const getURLS = function (usersID) {
+  const userURLS = {};
+  for (const key in urlDatabase) {
+    if (urlDatabase[key].userID === usersID) {
+      userURLS[key] = {
+        longURL: urlDatabase[key].longURL,
+        userID: urlDatabase[key].userID
+      };
+    }
+  } return userURLS;
 };
 
 
@@ -126,10 +157,18 @@ app.get("/urls", (req, res) => {
   const userID = req.cookies["user_id"];
   const user = users[userID];
 
+  if (!userID) {
+    return res.status(400).send("Please login to access your URLS.");
+  };
+
+  const usersURLS = getURLS(userID);
+
   const templateVars = {
-    urls: urlDatabase,
+    url: urlDatabase,
+    usersURLS,
     user
   };
+
   res.render("urls_index", templateVars);
 });
 
@@ -156,10 +195,21 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const userID = req.cookies["user_id"];
   const user = users[userID];
+  const userURLS = getURLS(userID);
+  const id = req.params.id;
+  const longURL = urlDatabase[id].longURL;
+
+  if (!userID) {
+    return res.status(400).send("Please login to access your URLS.");
+  };
+
+  if (userID !== urlDatabase[id].userID) {
+    return res.status(401).send("This page is not available.");
+  };
 
   const templateVars = {
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    id,
+    longURL,
     user
   };
   res.render("urls_show", templateVars);
@@ -177,7 +227,7 @@ app.get("/u/:id", (req, res) => {
     return res.status(400).send("Sorry that tiny URL does not exist.");
   };
 
-  const longURL = urlDatabase[uID];
+  const longURL = urlDatabase[uID].longURL;
   res.redirect(longURL);
 });
 
@@ -272,13 +322,17 @@ app.post("/logout", (req, res) => {
 app.post("/urls", (req, res) => {
   
   const userID = req.cookies["user_id"];
+  const longURL = req.body.longURL;
 
   if (!userID) {
     return res.status(401).send("Please login to create new tiny URLS.");
   };
 
   const newShortURL = generateRandomString();
-  urlDatabase[newShortURL] = req.body.longURL;
+  urlDatabase[newShortURL] = {
+    longURL,
+    userID
+  };
   res.redirect(`/urls/${newShortURL}`);
 });
 
@@ -286,7 +340,23 @@ app.post("/urls", (req, res) => {
 // Edit URL process:
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.newURL;
+  const id = req.params.id;
+  const longURL = req.body.longURL;
+  const userID = req.cookies["user_id"];
+
+  urlDatabase[id] = {
+    longURL,
+    userID
+  };
+
+  if (!userID) {
+    return res.status(401).send("Please login to access edit fuction.");
+  };
+
+  if (userID !== urlDatabase[id].userID) {
+    return res.status(401).send("This URL is not yours to edit.")
+  };
+
   res.redirect("/urls");
 });
 
@@ -294,6 +364,18 @@ app.post("/urls/:id", (req, res) => {
 // Delete URL process:
 
 app.post("/urls/:id/delete", (req, res) => {
+  const userID = req.cookies["user_id"];
+  const user = users[userID];
+  const id = req.params.id;
+
+  if (!userID) {
+    return res.status(401).send("Please login to access delete fuction.");
+  };
+
+  if (userID !== urlDatabase[id].userID) {
+    return res.status(401).send("This URL is not yours to delete.")
+  };
+
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
