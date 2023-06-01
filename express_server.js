@@ -21,8 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 const morgan = require("morgan");
 app.use(morgan('dev'));
 
-const crypto = require("crypto");
- 
+
 // Cookie Parser with Encryption:
 const cookieSession = require("cookie-session");
 app.use(cookieSession({
@@ -33,15 +32,15 @@ app.use(cookieSession({
 // Password Hasher:
 const bcrypt = require("bcryptjs");
 
-
 //Listener:
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-////////////////
-// DATABASES: //
-////////////////
+
+////////////////////////
+// TINYAPP DATABASES: //
+////////////////////////
 
 // URLS Database:
 
@@ -79,54 +78,17 @@ const users = {
   }
 };
 
-///////////////////////
-// HELPER FUNCTIONS: //
-///////////////////////
 
-// Random code generator:
+///////////////////////////////
+// TINYAPP HELPER FUNCTIONS: //
+///////////////////////////////
 
-const generateRandomString = function() {
-  const id = crypto.randomBytes(3).toString('hex');
-  return id;
-};
-
-
-// Email lookup:
-
-const findUserByEmail = function (newEmail) {
-  for (const userKey in users) {
-    if (users[userKey].email === newEmail) {
-      return users[userKey];
-    }
-  } return null;
-};
-
-
-// ID lookup:
-
-const findID = function (newID) {
-  for (const key in urlDatabase) {
-    if (key === newID) {
-      return true
-    }
-  } return false;
-};
-
-
-// Build user's individual URLS database:
-
-const getURLS = function (usersID) {
-  const userURLS = {};
-  for (const key in urlDatabase) {
-    if (urlDatabase[key].userID === usersID) {
-      userURLS[key] = {
-        longURL: urlDatabase[key].longURL,
-        userID: urlDatabase[key].userID
-      };
-    }
-  } return userURLS;
-};
-
+const { 
+  generateRandomString, 
+  findUserByEmail, 
+  findUserID,
+  getUserURLS 
+} = require("./helpers");
 
 
 
@@ -162,6 +124,7 @@ app.get("/register", (req, res) => {
 /////////////////
 
 app.get("/login", (req, res) => {
+
   const userID = req.session.user_id;
   const user = users[userID];
 
@@ -186,7 +149,7 @@ app.get("/urls", (req, res) => {
 
   const userID = req.session.user_id;
   const user = users[userID];
-  const usersURLS = getURLS(userID);
+  const usersURLS = getUserURLS(userID, urlDatabase);
 
   // Check if user has cookie from login:
   if (!userID) {
@@ -208,6 +171,7 @@ app.get("/urls", (req, res) => {
 //////////////////////////
 
 app.get("/urls/new", (req, res) => {
+
   const userID = req.session.user_id;
   const user = users[userID];
 
@@ -229,10 +193,10 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
 
+  const id = req.params.id;
   const userID = req.session.user_id;
   const user = users[userID];
-  const userURLS = getURLS(userID);
-  const id = req.params.id;
+  const userURLS = urlDatabase[id].userID;
   const longURL = urlDatabase[id].longURL;
 
   // Check if user has cookie from login:
@@ -241,7 +205,7 @@ app.get("/urls/:id", (req, res) => {
   };
 
   // Check if user's id matches id connected with the short URL:
-  if (userID !== urlDatabase[id].userID) {
+  if (userID !== userURLS) {
     return res.status(401).send("This page is not available.");
   };
 
@@ -264,7 +228,7 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[uID].longURL;
 
   // Check if the short URL code exists:
-  if (!findID(uID)){
+  if (!findUserID(uID, urlDatabase)){
     return res.status(400).send("Sorry that tiny URL does not exist.");
   };
 
@@ -310,7 +274,7 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
-  const findEmail = findUserByEmail(email);
+  const findEmail = findUserByEmail(email, users);
   const userID = generateRandomString();
 
   // Check if email and/or password imputs are not given by user:
@@ -350,7 +314,7 @@ app.post("/login", (req, res) => {
     return res.status(400).send("Please fill in all requested fields.");
   };
 
-  const findEmail = findUserByEmail(email);
+  const findEmail = findUserByEmail(email, users);
   const userID = findEmail.id;
   const checkPassword = findEmail.password;
   
