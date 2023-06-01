@@ -15,7 +15,7 @@ const generateRandomString = function() {
 // Email lookup:
 //database = users
 
-const findUserByEmail = function (newEmail, database) {
+const findUserByEmail = function(newEmail, database) {
   for (const userKey in database) {
     if (database[userKey].email === newEmail) {
       return database[userKey];
@@ -27,10 +27,10 @@ const findUserByEmail = function (newEmail, database) {
 // ID lookup:
 //database = urlDatabase
 
-const findUserID = function (newID, database) {
+const findUserID = function(newID, database) {
   for (const key in database) {
     if (key === newID) {
-      return true
+      return true;
     }
   } return false;
 };
@@ -39,7 +39,7 @@ const findUserID = function (newID, database) {
 // Build user's individual URLS database:
 //database = urlDatabase
 
-const getUserURLS = function (usersID, database) {
+const getUserURLS = function(usersID, database) {
   const userURLS = {};
   for (const key in database) {
     if (database[key].userID === usersID) {
@@ -58,4 +58,4 @@ module.exports = {
   findUserByEmail,
   findUserID,
   getUserURLS
-}
+};

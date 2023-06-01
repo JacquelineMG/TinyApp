@@ -8,7 +8,7 @@
 
 
 ////////////////////////////////
-// SERVER SETUP & MIDDLEWARE: // 
+// SERVER SETUP & MIDDLEWARE: //
 ////////////////////////////////
 
 const express = require("express");
@@ -16,17 +16,17 @@ const app = express();
 const PORT = 8080;
 
 app.set("view engine", "ejs");
+
 app.use(express.urlencoded({ extended: true }));
 
 const morgan = require("morgan");
 app.use(morgan('dev'));
 
-
 // Cookie Parser with Encryption:
 const cookieSession = require("cookie-session");
 app.use(cookieSession({
   name: "session",
-  keys: ["12312312312312", "1231231231231s"],
+  keys: ["12312312312312", "aushdiashdvh", "sfhiuf84rcf8yr382"],
 }));
 
 // Password Hasher:
@@ -83,11 +83,11 @@ const users = {
 // TINYAPP HELPER FUNCTIONS: //
 ///////////////////////////////
 
-const { 
-  generateRandomString, 
-  findUserByEmail, 
+const {
+  generateRandomString,
+  findUserByEmail,
   findUserID,
-  getUserURLS 
+  getUserURLS
 } = require("./helpers");
 
 
@@ -97,9 +97,9 @@ const {
 ////////////////////////
 
 
-////////////////////////
-// REGISTRATION PAGE: //
-////////////////////////
+////////////////////////////////
+// DISPLAY REGISTRATION PAGE: //
+////////////////////////////////
 
 app.get("/register", (req, res) => {
 
@@ -109,35 +109,37 @@ app.get("/register", (req, res) => {
   // Redirect if user already logged in:
   if (userID) {
     return res.redirect("/urls");
-  };
+  }
 
   const templateVars = {
     user
   };
-  
+
+  // Pass templateVars to urls_register and render the registration page:
   res.render("urls_register", templateVars);
 });
 
 
-/////////////////
-// LOGIN PAGE: //
-/////////////////
+/////////////////////////
+// DISPLAY LOGIN PAGE: //
+/////////////////////////
 
 app.get("/login", (req, res) => {
 
   const userID = req.session.user_id;
   const user = users[userID];
 
-// Redirect if user already has cookie from logging in:
+  // Redirect if user already has cookie from logging in:
   if (userID) {
     return res.redirect("/urls");
-  };
+  }
 
   const templateVars = {
     user
   };
 
-res.render("urls_login",  templateVars)
+  // Pass templateVars to urls_login and render the login page:
+  res.render("urls_login",  templateVars);
 });
 
 
@@ -154,21 +156,22 @@ app.get("/urls", (req, res) => {
   // Check if user has cookie from login:
   if (!userID) {
     return res.status(400).send("Please login to access your tiny URLs.");
-  };
+  }
 
   const templateVars = {
     url: urlDatabase,
     usersURLS,
     user
   };
-
+  
+  // Pass templateVars to urls_index and render the list of URLs page:
   res.render("urls_index", templateVars);
 });
 
 
-//////////////////////////
-// CREATE NEW URL PAGE: //
-//////////////////////////
+//////////////////////////////////
+// DISPLAY CREATE NEW URL PAGE: //
+//////////////////////////////////
 
 app.get("/urls/new", (req, res) => {
 
@@ -178,18 +181,20 @@ app.get("/urls/new", (req, res) => {
   // Check if user has cookie from login:
   if (!userID) {
     return res.redirect("/login");
-  };
+  }
 
   const templateVars = {
     user
   };
+
+  // Pass templateVars to urls_new and render the form for creating a new short URL:
   res.render("urls_new", templateVars);
 });
 
 
-////////////////////////////////
-// INDIVIDUAL SHORT URL PAGE: //
-////////////////////////////////
+////////////////////////////////////////
+// DISPLAY INDIVIDUAL SHORT URL PAGE: //
+////////////////////////////////////////
 
 app.get("/urls/:id", (req, res) => {
 
@@ -202,18 +207,20 @@ app.get("/urls/:id", (req, res) => {
   // Check if user has cookie from login:
   if (!userID) {
     return res.status(400).send("Please login to access your URLS.");
-  };
+  }
 
   // Check if user's id matches id connected with the short URL:
   if (userID !== userURLS) {
     return res.status(401).send("This page is not available.");
-  };
+  }
 
   const templateVars = {
     id,
     longURL,
     user
   };
+
+  // Pass templateVars to urls_show and render the requested individual short URL page:
   res.render("urls_show", templateVars);
 });
 
@@ -228,12 +235,13 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[uID].longURL;
 
   // Check if the short URL code exists:
-  if (!findUserID(uID, urlDatabase)){
+  if (!findUserID(uID, urlDatabase)) {
     return res.status(400).send("Sorry that tiny URL does not exist.");
-  };
+  }
 
   // Redirect user to short URL's corresponding long URL:
   res.redirect(longURL);
+
 });
 
 
@@ -241,22 +249,28 @@ app.get("/u/:id", (req, res) => {
 // JSON: //
 ///////////
 
+// Retrieve JSON page:
 app. get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
 
-//////////////////////
-// TEST/TEMP PAGES: // 
-//////////////////////
+////////////////
+// TEST PAGE: //
+////////////////
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+
+  const userID = req.session.user_id;
+
+  // Check if user is logged in and redirect them to accordingly to /login or /urls:
+  if (userID) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
 
 
 
@@ -280,28 +294,28 @@ app.post("/register", (req, res) => {
   // Check if email and/or password imputs are not given by user:
   if (!email || !password) {
     return res.status(400).send("Please fill in all the requested fields.");
-  };
+  }
 
   // Check if given email already exists in the database:
   if (findEmail) {
     return res.status(400).send("Email is already register. Please login.");
+  }
+
+  // If imputs are given and the email doesn't exist, proceed with registration by adding users info to users database:
+  users[userID] = {
+    id: userID,
+    email,
+    password: hashedPassword
   };
 
-// If imputs are given and the email doesn't exist, proceed with registration by adding users info to users database: 
-users[userID] = {
-  id: userID,
-  email,
-  password: hashedPassword
-};
-
-// Assign user a cookie and redirect after registration is complete:
-req.session.user_id = userID;
-res.redirect("/urls");
+  // Assign user a cookie and redirect them to /urls after registration is complete:
+  req.session.user_id = userID;
+  res.redirect("/urls");
 });
 
 
 ////////////////////
-// LOGIN PROCESS: // 
+// LOGIN PROCESS: //
 ////////////////////
 
 app.post("/login", (req, res) => {
@@ -312,26 +326,27 @@ app.post("/login", (req, res) => {
   // Check if email and/or password imputs are not given by user:
   if (!email || !password) {
     return res.status(400).send("Please fill in all requested fields.");
-  };
+  }
 
   const findEmail = findUserByEmail(email, users);
-  const userID = findEmail.id;
-  const checkPassword = findEmail.password;
   
   // Check if given email already exists in the database:
   if (!findEmail) {
     return res.status(403).send("Email not found. Please register.");
-  };
-  
+  }
+
+  const userID = findEmail.id;
+  const checkPassword = findEmail.password;
+
   // Check if given password matches hashed password in users database:
   if (!bcrypt.compareSync(password, checkPassword)) {
     return res.status(403).send("Wrong password. Please try again.");
-  };
+  }
   
   // Assign cookie as userID and redirect to /urls:
   req.session.user_id = userID;
   res.redirect("/urls");
-  });
+});
 
 
 /////////////////////
@@ -359,13 +374,15 @@ app.post("/urls", (req, res) => {
   // Check if user is logged in:
   if (!userID) {
     return res.status(401).send("Please login to create new tiny URLs.");
-  };
+  }
 
   // If above conditions are met, assign new URL info to the urlDatabase:
   urlDatabase[newShortURL] = {
     longURL,
     userID
   };
+
+  // redirect user to new short url's page:
   res.redirect(`/urls/${newShortURL}`);
 });
 
@@ -383,12 +400,12 @@ app.post("/urls/:id", (req, res) => {
   // Check if user is logged in:
   if (!userID) {
     return res.status(401).send("Please login to access edit fuction.");
-  };
+  }
 
   // Check if user's id matches id connected with URL before allowing them to edit URL:
   if (userID !== urlDatabase[id].userID) {
-    return res.status(401).send("This URL is not yours to edit.")
-  };
+    return res.status(401).send("This URL is not yours to edit.");
+  }
 
   // If the above conditions are met, allow longURL to be modified in urlDatabase:
   urlDatabase[id] = {
@@ -396,6 +413,7 @@ app.post("/urls/:id", (req, res) => {
     userID
   };
 
+  // redirect user to /urls:
   res.redirect("/urls");
 });
 
@@ -407,20 +425,19 @@ app.post("/urls/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
 
   const userID = req.session.user_id;
-  const user = users[userID];
   const id = req.params.id;
 
   // Check if user is logged in before allowing them to delete URL:
   if (!userID) {
     return res.status(401).send("Please login to access delete fuction.");
-  };
+  }
 
   // Check if user's id matches id connect with URL before allowing them to delete URL:
   if (userID !== urlDatabase[id].userID) {
-    return res.status(401).send("This URL is not yours to delete.")
-  };
+    return res.status(401).send("This URL is not yours to delete.");
+  }
 
-  // If above conditions are met, allow user to delete URL:
+  // If above conditions are met, allow user to delete URL and redirect user to /urls:
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
